@@ -194,16 +194,23 @@ You can explore data via:
 
 # Development Workflow
 
-1. Edit code in VSCode
-2. Use **MicroPico → Upload Project**
-3. Watch Pico logs in REPL
-4. Run the project again
-5. Refresh web UI
-6. Iterate
+1. Create a feature branch: `git checkout -b feature/<name>`
+2. Edit code in VS Code.
+3. Use **MicroPico → Upload Project**.
+4. Watch Pico logs in REPL.
+5. Test on device and refresh the web UI.
+6. Commit changes: `git add -A && git commit -m "Describe changes"`.
+7. Push your branch: `git push -u origin HEAD`.
+8. Inform others on what changes are coming.
+9. Merge directly after verification:
+   `git checkout main && git pull && git merge --no-ff feature/<name> && git push`.
+   (Optional) Delete branch after merge:
+   `git branch -d feature/<name> && git push origin --delete feature/<name>`
+10. Iterate.
 
 Fast, deterministic development.
 
-Known issues with MicroPico and VS Code:
+# Known issues with MicroPico and VS Code:
 
 - Upload appears successful but files don’t update on the Pico:
 
