@@ -24,8 +24,7 @@ The platform demonstrates a full sensor-to-cloud workflow with embedded intellig
 - Raspberry Pi Pico W
 - BMP280 (I2C) temperature/pressure sensor
 - RGB LED (common anode or cathode)
-- 3 × 220Ω resistors
-- Breadboard + male-male jumper wires
+- Breadboard + male-female jumper wires
 - USB cable (for flashing + data)
 
 ### **Software**
