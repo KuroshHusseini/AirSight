@@ -88,20 +88,34 @@ git clone <your repo url>
 cd AirSight
 ```
 
-## 4. Configure WiFi + Azure
+## 4. Configure WiFi, MQTT + Azure
 
-Edit `credentials/cred.py`:
+Create `credentials/network.py` with your WiFi credentials:
+
+```python
+SSID = "your_wifi_name"
+PWD = "your_wifi_password"
+```
+
+Create `credentials/mqtt.py` with your MQTT broker details:
+
+```python
+MQTT_BROKER = "broker.hivemq.com"  # or your broker address
+MQTT_PORT = 8883
+MQTT_USER = "your_username"  # optional, set to None if not needed
+MQTT_PASSWORD = "your_password"  # optional, set to None if not needed
+MQTT_TOPIC = "airsight/telemetry"
+```
+
+If using Azure IoT Hub in the future, edit `credentials/cred.py`:
 
 ```python
 WIFI_SSID = "your_wifi"
 WIFI_PASS = "your_password"
-```
-
-If we use it in the future
-
-```python
 AZURE_CONNECTION_STRING = None
 ```
+
+**Note:** `credentials/network.py` and `credentials/mqtt.py` are ignored by git to protect your credentials.
 
 ---
 
