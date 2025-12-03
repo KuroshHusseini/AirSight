@@ -1,0 +1,28 @@
+{
+  "name": "@airsight/web",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "lint": "eslint .",
+    "type-check": "nuxt typecheck"
+  },
+  "dependencies": {
+    "@airsight/shared-types": "*",
+    "nuxt": "^4.2.1",
+    "vue": "^3.5.25",
+    "vue-router": "^4.6.3"
+  },
+  "devDependencies": {
+    "@nuxt/devtools": "^1.5.0",
+    "@nuxtjs/tailwindcss": "^6.12.0",
+    "@types/node": "^24.10.1",
+    "typescript": "^5.3.3",
+    "vue-tsc": "^2.0.0"
+  }
+}

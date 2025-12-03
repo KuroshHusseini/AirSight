@@ -1,0 +1,8 @@
+{
+    "info": "This file is used to identify a MicroPico project folder.",
+    "project": "AirSight",
+    "type": "micropython",
+    "version": "1.0.0",
+    "created": "2024-01-01",
+    "description": "IoT air quality monitoring project"
+}
