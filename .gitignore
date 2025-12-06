@@ -1,5 +1,8 @@
 # Credentials
 credentials/*.py
+apps/device/credentials/*.py
+apps/device/credentials/*.json
+apps/device/credentials/*.txt
 
 # Python cache
 __pycache__/

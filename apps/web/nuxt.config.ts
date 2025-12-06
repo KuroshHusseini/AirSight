@@ -1,19 +1,19 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  compatibilityDate: "2025-07-15",
   devtools: { enabled: true },
 
   modules: ["@nuxtjs/tailwindcss"],
 
   typescript: {
     strict: true,
-    typeCheck: false  // Disabled due to vite-plugin-checker issue
+    typeCheck: false,
   },
 
   runtimeConfig: {
-    // Server-only secrets
-    mqttBrokerUrl: process.env.MQTT_BROKER_URL || "mqtt://localhost:1883",
-    mongodbUri: process.env.MONGODB_URI || "mongodb://localhost:27017/airsight",
+    mqttBroker: process.env.MQTT_BROKER,
+    mqttUsername: process.env.MQTT_USERNAME,
+    mqttPassword: process.env.MQTT_PASSWORD,
+    mongodbUri: process.env.MONGODB_URI,
     openaiApiKey: process.env.OPENAI_API_KEY,
     weatherApiKey: process.env.WEATHER_API_KEY,
 
@@ -22,4 +22,6 @@ export default defineNuxtConfig({
       appName: "AirSight",
     },
   },
+
+  compatibilityDate: "2024-11-01",
 });

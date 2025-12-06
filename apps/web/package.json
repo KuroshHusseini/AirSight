@@ -13,8 +13,9 @@
     "type-check": "nuxt typecheck"
   },
   "dependencies": {
-    "@airsight/shared-types": "*",
+    "mqtt": "^5.14.1",
     "nuxt": "^4.2.1",
+    "openai": "^6.10.0",
     "vue": "^3.5.25",
     "vue-router": "^4.6.3"
   },
