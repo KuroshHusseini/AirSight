@@ -15,6 +15,7 @@
     "type-check": "yarn workspaces run type-check"
   },
   "devDependencies": {
+    "prettier": "^3.7.4",
     "typescript": "^5.3.3"
   },
   "engines": {

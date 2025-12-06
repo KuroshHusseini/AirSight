@@ -17,12 +17,9 @@ airsight/
 
 ## ✨ Core Features
 
-- **Real-time indoor environment telemetry**: Temperature, humidity, and pressure from Pico W
-- **Weather integration**: Hourly outdoor weather based on user location
+- **Real-time indoor environment telemetry**: Temperature, and pressure from Pico W
 - **AI-driven recommendations**: OpenAI-powered guidance for clothing, energy, nutrition
-- **Historical trend analysis**: Time-series charts showing environmental patterns
 - **Unified responsive dashboard**: Mobile-first UX across all devices
-- **Cloud-backed data retention**: MongoDB for analytics and long-term insights
 - **MQTT messaging**: Real-time device-to-cloud communication
 
 ## 🛠️ Tech Stack
@@ -43,9 +40,7 @@ airsight/
 
 - Nuxt 3 (Nitro server)
 - Node.js & TypeScript
-- MongoDB / MongoDB Atlas
 - OpenAI API
-- Weather API (OpenWeather / Tomorrow.io)
 
 ### Frontend
 
@@ -56,7 +51,6 @@ airsight/
 ### Deployment
 
 - Vercel (Web app)
-- MongoDB Atlas (Database)
 - HiveMQ Cloud (MQTT broker)
 
 ## 🚀 Quick Start
@@ -66,7 +60,6 @@ airsight/
 - **Node.js** 18+ and **Yarn** 1.22+
 - **Raspberry Pi Pico W** with MicroPython firmware
 - **MQTT Broker** (EMQX locally or HiveMQ Cloud)
-- **MongoDB** instance (local or Atlas)
 
 ### Installation
 
@@ -87,15 +80,15 @@ cp apps/web/.env.example apps/web/.env
 Create `apps/web/.env`:
 
 ```env
-# MQTT Configuration
-MQTT_BROKER_URL=mqtt://localhost:1883
-
-# Database
-MONGODB_URI=mongodb://localhost:27017/airsight
+# MQTT Configuration (HiveMQ Cloud example)
+DEVICE_ID=pico-001
+MQTT_USERNAME=airsight
+MQTT_PASSWORD=your_mqtt_password
+MQTT_BROKER=xxxxx.s1.eu.hivemq.cloud:8883
+MQTT_PORT=8883
 
 # API Keys
 OPENAI_API_KEY=your_openai_key_here
-WEATHER_API_KEY=your_weather_api_key_here
 ```
 
 ### Development
@@ -120,10 +113,47 @@ yarn type-check
 2. Update device credentials:
    - `apps/device/credentials/network.py` - WiFi credentials
    - `apps/device/credentials/mqtt.py` - MQTT broker details
+
+- These files are git-ignored by default (to avoid leaking secrets)
+
 3. Upload code using MicroPico VSCode extension
 4. Run `main.py` on the device
 
 See [apps/device/README.md](apps/device/README.md) for detailed instructions.
+
+## 🔌 Live Data Streaming (SSE)
+
+The web dashboard receives real-time sensor data via Server-Sent Events (SSE):
+
+- Backend stream endpoint: `GET /api/sensors/latest`
+- Frontend connects using `EventSource('/api/sensors/latest')`
+- Message types:
+  - `initial`: array of latest readings (may be empty if broker not yet connected)
+  - `update`: single reading update
+  - `heartbeat`: keep-alive every 10s
+  - `status`: broker status (e.g., `HiveMQ is not connected`)
+
+Troubleshooting:
+
+- If the browser shows `MIME type is text/html`, ensure the endpoint sets:
+  - `Content-Type: text/event-stream; charset=utf-8`
+  - `Cache-Control: no-cache, no-transform`
+  - `Connection: keep-alive`
+  - `X-Accel-Buffering: no`
+- In DevTools → Network, `/api/sensors/latest` should be pending with 200 and the correct content type.
+
+## 🖥️ Frontend Controls
+
+- The `SensorDashboard` component includes Connect/Disconnect buttons.
+- Disconnect stops auto-reconnect and closes the SSE connection.
+- Connect re-establishes the SSE stream to `/api/sensors/latest`.
+
+## 🔐 Security & Secrets
+
+- Device credentials (`apps/device/credentials/*`) are ignored by `.gitignore`:
+  - `apps/device/credentials/*.py`, `*.json`, `*.txt`
+- Keep your `.env` values secret; `.env` is ignored, `.env.example` documents required variables.
+- Rotate secrets regularly and use environment variables in production.
 
 ## 📁 Workspace Structure
 
@@ -134,7 +164,6 @@ apps/web/
 ├── server/
 │   ├── api/              # REST API endpoints
 │   ├── mqtt/             # MQTT client & message handlers
-│   ├── models/           # MongoDB schemas
 │   └── services/         # OpenAI, Weather services
 ├── pages/                # Vue pages (dashboard, analytics)
 ├── components/           # Vue components
@@ -165,14 +194,12 @@ TypeScript types and constants shared between web app and device (as comments):
 ```bash
 # Run command in specific workspace
 yarn workspace @airsight/web dev
-yarn workspace @airsight/shared-types build
 
 # Run command across all workspaces
 yarn workspaces run build
-yarn workspaces run type-check
 
 # Add dependency to workspace
-yarn workspace @airsight/web add mqtt mongodb
+yarn workspace @airsight/web add mqtt
 
 # Add dev dependency
 yarn workspace @airsight/web add -D eslint
@@ -181,14 +208,6 @@ yarn workspace @airsight/web add -D eslint
 yarn add -W -D prettier
 ```
 
-## 📊 MQTT Topics
-
-Defined in `packages/shared-types/src/index.ts`:
-
-- `airsight/sensors/indoor` - Sensor readings from Pico W
-- `airsight/device/status` - Device online/offline status
-- `airsight/commands` - Commands to device
-
 ## 🗄️ Data Models
 
 ### SensorReading
@@ -196,7 +215,6 @@ Defined in `packages/shared-types/src/index.ts`:
 ```typescript
 {
   temperature: number; // Celsius
-  humidity: number; // Percentage
   pressure: number; // hPa
   timestamp: number; // Unix timestamp
   deviceId: string;
@@ -216,12 +234,6 @@ vercel login
 # Deploy
 vercel --prod
 ```
-
-### Database (MongoDB Atlas)
-
-1. Create a free cluster at [mongodb.com/cloud/atlas](https://www.mongodb.com/cloud/atlas)
-2. Get connection string
-3. Update `MONGODB_URI` in production environment
 
 ### MQTT Broker (HiveMQ Cloud)
 
@@ -247,8 +259,3 @@ vercel --prod
 ## 📄 License
 
 This project is licensed under the MIT License.
-
-## 🙏 Acknowledgments
-
-- Course: IoT Systems, University of Oulu
-- Technologies: Nuxt, MicroPython, MQTT, MongoDB, OpenAI
