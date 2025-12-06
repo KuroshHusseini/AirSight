@@ -39,21 +39,30 @@ const connectToStream = () => {
     eventSource.onmessage = (event) => {
       try {
         const message = JSON.parse(event.data);
+
         if (message.type === "status" && message.message) {
           // Show broker status (e.g., "HiveMQ is not connected")
           connectionStatus.value = "disconnected";
           console.warn("[SSE] Status:", message.message);
           return;
         }
+
         if (message.type === "initial") {
           sensors.value = Array.isArray(message.data) ? message.data : [];
-        } else if (message.type === "update") {
+        }
+
+        if (message.type === "update") {
           const reading: SensorReading = message.data;
           const idx = sensors.value.findIndex(
             (s) => s.deviceId === reading.deviceId
           );
-          if (idx !== -1) sensors.value[idx] = reading;
-          else sensors.value.push(reading);
+
+          if (idx !== -1) {
+            sensors.value[idx] = reading;
+            return;
+          }
+
+          sensors.value.push(reading);
         }
       } catch (err) {
         console.error("[SSE] Parse error:", err, event.data);
@@ -96,7 +105,7 @@ onUnmounted(() => {
       <span v-if="connectionStatus === 'connecting'"
         >Connecting to sensor stream...</span
       >
-      <span v-else-if="connectionStatus === 'connected'"
+      <span v-if="connectionStatus === 'connected'"
         >Connected to live sensor data</span
       >
       <span v-else>Disconnected from sensor stream</span>
