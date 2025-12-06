@@ -1,0 +1,24 @@
+{
+  "name": "airsight",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "yarn workspace @airsight/web dev",
+    "build": "yarn workspace @airsight/web build",
+    "build:web": "yarn workspace @airsight/web build",
+    "preview": "yarn workspace @airsight/web preview",
+    "lint": "yarn workspaces run lint",
+    "type-check": "yarn workspaces run type-check"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=24.0.0",
+    "yarn": ">=1.22.22"
+  }
+}

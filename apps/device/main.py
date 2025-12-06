@@ -1,8 +1,9 @@
 import time
 from config.connect_to_wifi import connect_to_wifi
 from config.connect_to_bmp import connect_to_bmp
-from config.connec_to_mqtt import connect_to_mqtt
+from config.connect_to_mqtt import connect_to_mqtt
 from utils.publisher import publisher
+from constants import MQTT_TOPIC_TEMP, MQTT_TOPIC_PRESS
 
 # connect to wifi
 connect_to_wifi()
@@ -16,8 +17,8 @@ client = connect_to_mqtt()
 
 while True:
     # publish as MQTT payload
-    publisher(client, "tumi_picow/temperature", str(bmp.temperature))
-    publisher(client, "tumi_picow/pressure", str(bmp.pressure))
+    publisher(client, MQTT_TOPIC_TEMP, str(bmp.temperature))
+    publisher(client, MQTT_TOPIC_PRESS, str(bmp.pressure))
 
-    # every 5s
-    time.sleep_ms(5000)
+    # every 10s
+    time.sleep(10)

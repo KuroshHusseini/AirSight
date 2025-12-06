@@ -1,7 +1,7 @@
 from .configure_ssl import context
 from .connect_to_wifi import connect_to_wifi
 from .connect_to_bmp import connect_to_bmp
-from .connec_to_mqtt import connect_to_mqtt
+from .connect_to_mqtt import connect_to_mqtt
 
 __all__ = [
     "context",
