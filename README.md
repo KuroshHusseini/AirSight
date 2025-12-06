@@ -54,7 +54,7 @@ airsight/
 
 ### Prerequisites
 
-- **Node.js** 18+ and **Yarn** 1.22+
+- **Node.js** 24+ and **Yarn** 1.22+
 - **Raspberry Pi Pico W** with MicroPython firmware
 - **MQTT Broker** (EMQX locally or HiveMQ Cloud)
 
