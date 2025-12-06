@@ -17,12 +17,9 @@ airsight/
 
 ## ✨ Core Features
 
-- **Real-time indoor environment telemetry**: Temperature, humidity, and pressure from Pico W
-- **Weather integration**: Hourly outdoor weather based on user location
+- **Real-time indoor environment telemetry**: Temperature, and pressure from Pico W
 - **AI-driven recommendations**: OpenAI-powered guidance for clothing, energy, nutrition
-- **Historical trend analysis**: Time-series charts showing environmental patterns
 - **Unified responsive dashboard**: Mobile-first UX across all devices
-- **Cloud-backed data retention**: MongoDB for analytics and long-term insights
 - **MQTT messaging**: Real-time device-to-cloud communication
 
 ## 🛠️ Tech Stack
@@ -42,21 +39,15 @@ airsight/
 ### Backend
 
 - Nuxt 3 (Nitro server)
-- Node.js & TypeScript
-- MongoDB / MongoDB Atlas
+- TypeScript
 - OpenAI API
-- Weather API (OpenWeather / Tomorrow.io)
 
 ### Frontend
-
-- Vue 3
-- Tailwind CSS
-- Chart.js / ECharts
+- Nuxt 3 & Vue 3
 
 ### Deployment
 
 - Vercel (Web app)
-- MongoDB Atlas (Database)
 - HiveMQ Cloud (MQTT broker)
 
 ## 🚀 Quick Start
@@ -66,7 +57,6 @@ airsight/
 - **Node.js** 18+ and **Yarn** 1.22+
 - **Raspberry Pi Pico W** with MicroPython firmware
 - **MQTT Broker** (EMQX locally or HiveMQ Cloud)
-- **MongoDB** instance (local or Atlas)
 
 ### Installation
 
@@ -87,11 +77,12 @@ cp apps/web/.env.example apps/web/.env
 Create `apps/web/.env`:
 
 ```env
-# MQTT Configuration
-MQTT_BROKER_URL=mqtt://localhost:1883
-
-# Database
-MONGODB_URI=mongodb://localhost:27017/airsight
+# MQTT Configuration (HiveMQ Cloud example)
+DEVICE_ID=pico-001
+MQTT_USERNAME=airsight
+MQTT_PASSWORD=your_mqtt_password
+MQTT_BROKER=xxxx.s1.eu.hivemq.cloud:8883
+MQTT_PORT=8883
 
 # API Keys
 OPENAI_API_KEY=your_openai_key_here
@@ -110,8 +101,6 @@ yarn build
 # Preview production build
 yarn preview
 
-# Type checking across all workspaces
-yarn type-check
 ```
 
 ### Device Setup
@@ -134,7 +123,6 @@ apps/web/
 ├── server/
 │   ├── api/              # REST API endpoints
 │   ├── mqtt/             # MQTT client & message handlers
-│   ├── models/           # MongoDB schemas
 │   └── services/         # OpenAI, Weather services
 ├── pages/                # Vue pages (dashboard, analytics)
 ├── components/           # Vue components
@@ -152,14 +140,6 @@ apps/device/
 └── main.py               # Entry point
 ```
 
-### `packages/shared-types` - Shared Types
-
-TypeScript types and constants shared between web app and device (as comments):
-
-- MQTT topic definitions
-- Sensor data interfaces
-- API contracts
-
 ## 🔧 Yarn Workspace Commands
 
 ```bash
@@ -169,10 +149,9 @@ yarn workspace @airsight/shared-types build
 
 # Run command across all workspaces
 yarn workspaces run build
-yarn workspaces run type-check
 
 # Add dependency to workspace
-yarn workspace @airsight/web add mqtt mongodb
+yarn workspace @airsight/web add mqtt
 
 # Add dev dependency
 yarn workspace @airsight/web add -D eslint
@@ -181,29 +160,16 @@ yarn workspace @airsight/web add -D eslint
 yarn add -W -D prettier
 ```
 
-## 📊 MQTT Topics
-
-Defined in `packages/shared-types/src/index.ts`:
-
-- `airsight/sensors/indoor` - Sensor readings from Pico W
-- `airsight/device/status` - Device online/offline status
-- `airsight/commands` - Commands to device
-
-## 🗄️ Data Models
-
 ### SensorReading
 
 ```typescript
 {
   temperature: number; // Celsius
-  humidity: number; // Percentage
   pressure: number; // hPa
   timestamp: number; // Unix timestamp
   deviceId: string;
 }
 ```
-
-See `packages/shared-types/src/index.ts` for all data models.
 
 ## 🚀 Deployment
 
@@ -217,12 +183,6 @@ vercel login
 vercel --prod
 ```
 
-### Database (MongoDB Atlas)
-
-1. Create a free cluster at [mongodb.com/cloud/atlas](https://www.mongodb.com/cloud/atlas)
-2. Get connection string
-3. Update `MONGODB_URI` in production environment
-
 ### MQTT Broker (HiveMQ Cloud)
 
 1. Create free cluster at [hivemq.com/cloud](https://www.hivemq.com/mqtt-cloud-broker/)
@@ -234,8 +194,7 @@ vercel --prod
 1. **Device Development**: Edit MicroPython code, flash to Pico W via MicroPico
 2. **Backend API**: Create endpoints in `apps/web/server/api/`
 3. **Frontend**: Build Vue components in `apps/web/components/`
-4. **Shared Types**: Update schemas in `packages/shared-types/src/`
-5. **Testing**: Test device → MQTT → backend → frontend flow
+4. **Testing**: Test device → MQTT → backend → frontend flow
 
 ## 🤝 Contributing
 
@@ -248,7 +207,3 @@ vercel --prod
 
 This project is licensed under the MIT License.
 
-## 🙏 Acknowledgments
-
-- Course: IoT Systems, University of Oulu
-- Technologies: Nuxt, MicroPython, MQTT, MongoDB, OpenAI
