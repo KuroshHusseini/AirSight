@@ -82,7 +82,7 @@ onUnmounted(() => {
 
 <template>
   <div class="sensor-dashboard">
-    <h1>Real-Time Sensor Dashboard</h1>
+    <h1 class="heading">Real-Time Sensor Dashboard</h1>
     <p class="description">
       Monitor live temperature and pressure readings from IoT sensors
     </p>
@@ -157,7 +157,13 @@ onUnmounted(() => {
   margin: 0 auto;
 }
 
-h2 {
+.heading {
+  margin-bottom: 1rem;
+  font-size: 2rem;
+  color: #1f2937;
+}
+
+.description {
   margin-bottom: 1rem;
   font-size: 1.5rem;
   color: #1f2937;
