@@ -148,11 +148,11 @@ export const mqttService = {
     console.log("[MQTT Service] 🗑️  Cleared all readings");
   },
 
-  onSensorUpdate: (callback: (reading: SensorReading) => void) => {
+  onSensorLatest: (callback: (reading: SensorReading) => void) => {
     eventEmitter.on("sensorUpdate", callback);
   },
 
-  offSensorUpdate: (callback: (reading: SensorReading) => void) => {
+  offSensorLatest: (callback: (reading: SensorReading) => void) => {
     eventEmitter.off("sensorUpdate", callback);
   },
 };
