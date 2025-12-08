@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import { computed } from "vue";
-import { useRecommendations } from "../../composables/useRecommendations";
-
 const {
   loading,
   error,
@@ -11,6 +8,7 @@ const {
   currentPressure,
   deviceId,
 } = useRecommendations();
+const { isConnected } = useSensorStream();
 
 // Disable ask button when temperature or pressure are missing
 const dataIsAvailable = computed(() => {
@@ -38,19 +36,20 @@ const dataIsAvailable = computed(() => {
       <span v-else>Loading...</span>
     </button>
 
-    <p v-if="!dataIsAvailable" class="hint">
+    <p v-if="!dataIsAvailable && !loading" class="hint">
       Waiting for sensor data (temperature and pressure)...
     </p>
 
     <p v-if="error" class="error">{{ error }}</p>
 
-    <div v-if="recommendation && !error" class="cards">
+    <div v-if="recommendation && !error && isConnected" class="cards">
       <div class="card info">
         <h3>Current Sensor Readings</h3>
         <p><strong>Device:</strong> {{ deviceId }}</p>
         <p><strong>Temperature:</strong> {{ currentTemp ?? "N/A" }} °C</p>
         <p><strong>Pressure:</strong> {{ currentPressure ?? "N/A" }} hPa</p>
       </div>
+
       <div class="card">
         <h3>Clothing</h3>
         <p>{{ recommendation.clothing }}</p>

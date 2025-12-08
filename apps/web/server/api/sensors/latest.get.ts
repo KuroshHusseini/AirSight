@@ -10,7 +10,6 @@ export default defineEventHandler((event) => {
   const latest = mqttService.getLatestReading();
   const initialData = latest ? [latest] : [];
 
-  // Proper SSE headers
   setResponseStatus(event, 200);
   setHeader(event, "Content-Type", "text/event-stream; charset=utf-8");
   setHeader(event, "Cache-Control", "no-cache, no-transform");
@@ -19,7 +18,6 @@ export default defineEventHandler((event) => {
 
   const eventStream = createEventStream(event);
   let closed = false;
-  console.log("[SSE] Client connected", mqttService.getStatus());
 
   const safePush = (payload: string) => {
     if (closed) return;

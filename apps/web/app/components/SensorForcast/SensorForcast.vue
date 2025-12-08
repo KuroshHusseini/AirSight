@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import { useSensorStream } from "../../composables/useSensorStream";
-import { formatTimestamp } from "./utils/formatTimestamp";
-
 const { sensorData, connectionStatus, connect, disconnectFromSensorHandler } =
   useSensorStream();
 </script>
@@ -13,34 +10,34 @@ const { sensorData, connectionStatus, connect, disconnectFromSensorHandler } =
       Monitor live temperature and pressure readings from IoT sensors
     </p>
 
-    <div
-      class="status"
-      :class="connectionStatus"
-      role="status"
-      aria-live="polite"
-    >
-      <span v-if="connectionStatus === 'connecting'">
-        Connecting to sensor stream...
-      </span>
-      <span v-if="connectionStatus === 'connected'">
-        Connected to live sensor data
-      </span>
-      <span v-if="connectionStatus === 'disconnected'">
-        Disconnected from sensor stream
-      </span>
-    </div>
-
-    <div class="btn-container">
-      <button
-        class="btn disconnect"
-        v-if="connectionStatus === 'connected'"
-        @click="disconnectFromSensorHandler"
+    <div class="status-btn-container">
+      <div class="btn-container">
+        <button
+          class="btn disconnect"
+          v-if="connectionStatus === 'connected'"
+          @click="disconnectFromSensorHandler"
+        >
+          Disconnect
+        </button>
+        <button v-else class="btn connect" @click="connect">Connect</button>
+      </div>
+      <div
+        class="status"
+        :class="connectionStatus"
+        role="status"
+        aria-live="polite"
       >
-        Disconnect
-      </button>
-      <button v-else class="btn connect" @click="connect">Connect</button>
+        <span v-if="connectionStatus === 'connecting'">
+          Connecting to sensor stream...
+        </span>
+        <span v-if="connectionStatus === 'connected'">
+          Connected to live sensor data
+        </span>
+        <span v-if="connectionStatus === 'disconnected'">
+          Disconnected from sensor stream
+        </span>
+      </div>
     </div>
-
     <div v-if="!sensorData || connectionStatus !== 'connected'" class="no-data">
       <p>
         No sensor data available yet. Connect to start receiving real-time
@@ -61,7 +58,13 @@ const { sensorData, connectionStatus, connect, disconnectFromSensorHandler } =
         </div>
         <div class="timestamp">
           Last update:
-          <time :datetime="new Date(sensorData.timestamp).toISOString()">
+          <time
+            :datetime="
+              sensorData.timestamp
+                ? new Date(sensorData.timestamp).toISOString()
+                : ''
+            "
+          >
             {{ formatTimestamp(sensorData.timestamp) }}
           </time>
         </div>
@@ -73,6 +76,13 @@ const { sensorData, connectionStatus, connect, disconnectFromSensorHandler } =
 <style scoped>
 .sensor-dashboard {
   max-width: 800px;
+}
+
+.status-btn-container {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  align-items: center;
 }
 
 .heading {
@@ -88,6 +98,7 @@ const { sensorData, connectionStatus, connect, disconnectFromSensorHandler } =
 }
 
 .status {
+  flex-grow: 1;
   padding: 0.75rem 1rem;
   border-radius: 0.5rem;
   margin-bottom: 1.5rem;
@@ -134,7 +145,7 @@ const { sensorData, connectionStatus, connect, disconnectFromSensorHandler } =
 }
 
 .btn {
-  padding: 0.5rem 1rem;
+  padding: 0.8rem 1rem;
   border-radius: 0.5rem;
   color: white;
   border: none;
