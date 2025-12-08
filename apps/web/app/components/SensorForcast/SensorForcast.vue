@@ -18,10 +18,10 @@ const isDetailLoading = computed(() => {
 
   return (
     !data ||
-    data.value.deviceId == null ||
-    data.value.temperature == null ||
-    data.value.pressure == null ||
-    data.value.timestamp == null
+    data.value?.deviceId == null ||
+    data.value?.temperature == null ||
+    data.value?.pressure == null ||
+    data.value?.timestamp == null
   );
 });
 </script>
