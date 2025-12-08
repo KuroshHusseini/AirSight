@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { computed } from "vue";
+
 const {
   loading,
   error,
@@ -22,6 +24,10 @@ const dataIsAvailable = computed(() => {
     pressure !== null
   );
 });
+
+const waitingForData = computed(
+  () => isConnected.value && !dataIsAvailable.value
+);
 </script>
 
 <template>
@@ -31,13 +37,20 @@ const dataIsAvailable = computed(() => {
       Get personalized recommendations based on current sensor readings
     </p>
 
-    <button class="btn" :disabled="loading || !dataIsAvailable" @click="askAI">
+    <button
+      class="btn"
+      :disabled="loading || !dataIsAvailable || waitingForData"
+      @click="askAI"
+    >
       <span v-if="!loading">Ask AI for recommendations</span>
       <span v-else>Loading...</span>
     </button>
 
-    <p v-if="!dataIsAvailable && !loading" class="hint">
-      Waiting for sensor data (temperature and pressure)...
+    <p v-if="waitingForData && !loading" class="hint">
+      Connected. Waiting for sensor data (temperature and pressure)...
+    </p>
+    <p v-else-if="!dataIsAvailable && !loading" class="hint">
+      Waiting to connect and receive sensor data...
     </p>
 
     <p v-if="error" class="error">{{ error }}</p>

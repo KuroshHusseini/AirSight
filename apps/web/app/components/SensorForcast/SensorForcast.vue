@@ -1,6 +1,29 @@
 <script setup lang="ts">
-const { sensorData, connectionStatus, connect, disconnectFromSensorHandler } =
-  useSensorStream();
+import type { SensorReading, SensorReadingRef } from "./types";
+
+const {
+  sensorData,
+  connectionStatus,
+  connect,
+  isConnected,
+  disconnectFromSensorHandler,
+} = useSensorStream();
+// Connected to the stream but haven't received any reading yet
+const waitingForData = computed(
+  () => connectionStatus.value === "connected" && !sensorData
+);
+
+const isDetailLoading = computed(() => {
+  const data = sensorData as SensorReadingRef;
+
+  return (
+    !data ||
+    data.value.deviceId == null ||
+    data.value.temperature == null ||
+    data.value.pressure == null ||
+    data.value.timestamp == null
+  );
+});
 </script>
 
 <template>
@@ -38,7 +61,13 @@ const { sensorData, connectionStatus, connect, disconnectFromSensorHandler } =
         </span>
       </div>
     </div>
-    <div v-if="!sensorData || connectionStatus !== 'connected'" class="no-data">
+    <div v-if="waitingForData" class="no-data">
+      <p>Connected. Waiting for first sensor reading…</p>
+    </div>
+    <div
+      v-else-if="connectionStatus !== 'connected' || !isConnected.valueOf()"
+      class="no-data"
+    >
       <p>
         No sensor data available yet. Connect to start receiving real-time
         readings.
@@ -47,27 +76,43 @@ const { sensorData, connectionStatus, connect, disconnectFromSensorHandler } =
 
     <div v-else>
       <div class="sensor-card">
-        <h2>{{ sensorData.deviceId }}</h2>
-        <div class="reading">
-          <span class="label">Temperature</span>
-          <span class="value">{{ sensorData.temperature }} °C</span>
-        </div>
-        <div class="reading">
-          <span class="label">Pressure</span>
-          <span class="value">{{ sensorData.pressure }} hPa</span>
-        </div>
-        <div class="timestamp">
-          Last update:
-          <time
-            :datetime="
-              sensorData.timestamp
-                ? new Date(sensorData.timestamp).toISOString()
-                : ''
-            "
-          >
-            {{ formatTimestamp(sensorData.timestamp) }}
-          </time>
-        </div>
+        <template v-if="isDetailLoading">
+          <div class="reading">
+            <span class="label">Temperature</span>
+            <span class="value skeleton">Pulling data…</span>
+          </div>
+          <div class="reading">
+            <span class="label">Pressure</span>
+            <span class="value skeleton">Pulling data…</span>
+          </div>
+          <div class="timestamp">
+            Last update:
+            <span class="skeleton">Pulling data…</span>
+          </div>
+        </template>
+        <template v-else>
+          <h2>{{ sensorData?.deviceId }}</h2>
+          <div class="reading">
+            <span class="label">Temperature</span>
+            <span class="value">{{ sensorData?.temperature }} °C</span>
+          </div>
+          <div class="reading">
+            <span class="label">Pressure</span>
+            <span class="value">{{ sensorData?.pressure }} hPa</span>
+          </div>
+          <div class="timestamp">
+            Last update:
+            <time
+              :datetime="
+                sensorData?.timestamp
+                  ? new Date(sensorData?.timestamp).toISOString()
+                  : ''
+              "
+            >
+              {{ formatTimestamp(Number(sensorData?.timestamp)) }}
+            </time>
+          </div>
+        </template>
       </div>
     </div>
   </div>
@@ -180,7 +225,7 @@ const { sensorData, connectionStatus, connect, disconnectFromSensorHandler } =
 }
 
 .value {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   font-weight: 700;
   color: #2563eb;
 }
