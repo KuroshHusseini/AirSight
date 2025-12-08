@@ -5,6 +5,10 @@ export interface SensorReading {
   timestamp: number;
 }
 
+export interface SensorReadingRef {
+  value: SensorReading;
+}
+
 export type connectionStatusType = "connecting" | "connected" | "disconnected";
 
 export interface connectionStatusRef {

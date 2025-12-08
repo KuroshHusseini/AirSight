@@ -14,8 +14,6 @@ const connectToHiveMQ = () => {
     return client;
   }
 
-  console.log(`[MQTT Service] Connecting to ${brokerUrl}...`);
-
   client = mqtt.connect(brokerUrl, {
     username: process.env.MQTT_USERNAME,
     password: process.env.MQTT_PASSWORD,

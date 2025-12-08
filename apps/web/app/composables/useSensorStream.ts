@@ -12,12 +12,14 @@ export const useSensors = () =>
 
 export const useSensorStream = () => {
   const connectionStatus = useConnectionStatus();
+  const isConnected = ref(false);
   const sensorData = useSensors();
   const eventSource = shallowRef<EventSource | null>(null);
   const reconnectTimer = shallowRef<number | null>(null);
 
   const disconnectFromSensorHandler = () => {
     connectionStatus.value = "disconnected";
+    isConnected.value = false;
 
     if (reconnectTimer.value != null) {
       clearTimeout(reconnectTimer.value);
@@ -40,6 +42,7 @@ export const useSensorStream = () => {
 
       es.onopen = () => {
         connectionStatus.value = "connected";
+        isConnected.value = true;
       };
 
       es.onmessage = (event) => {
@@ -59,8 +62,13 @@ export const useSensorStream = () => {
       };
 
       es.onerror = () => {
-        // if user manually disconnected, don't auto reconnect
-        if (connectionStatus.value === "disconnected") return;
+        console.error("[SSE] Connection error");
+
+        if (connectionStatus.value === "disconnected") {
+          connectionStatus.value = "disconnected";
+          isConnected.value = false;
+          return;
+        }
 
         disconnectFromSensorHandler();
         reconnectTimer.value = window.setTimeout(connect, 5000);
@@ -68,6 +76,7 @@ export const useSensorStream = () => {
     } catch (e) {
       console.error("[SSE] Connection error:", e);
       connectionStatus.value = "disconnected";
+      isConnected.value = false;
     }
   };
 
@@ -82,6 +91,7 @@ export const useSensorStream = () => {
   return {
     sensorData,
     connectionStatus,
+    isConnected,
     connect,
     disconnectFromSensorHandler,
   };

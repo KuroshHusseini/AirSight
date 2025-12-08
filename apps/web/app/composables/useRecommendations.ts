@@ -25,22 +25,15 @@ export const useRecommendations = () => {
     error.value = null;
 
     try {
-      const context = {
-        deviceId: deviceId.value,
-        temperature: currentTemp.value,
-        pressure: currentPressure.value,
-        timestamp: Date.now(),
-      };
-      console.log("🚀 ~ askAI ~ context:", context);
-
-      const res = await $fetch<{ response: string }>("/api/recommendations", {
+      const res = await $fetch("/api/recommendations", {
         method: "POST",
         body: {
-          context,
+          deviceId: deviceId.value,
+          temperature: currentTemp.value,
+          pressure: currentPressure.value,
+          timestamp: Date.now(),
         },
       });
-
-      console.log(res);
 
       const parse = JSON.parse(res.response);
       recommendation.value = parse;
@@ -52,13 +45,13 @@ export const useRecommendations = () => {
   };
 
   return {
-    loading,
-    error,
-    recommendation,
     askAI,
+    error,
+    loading,
+    recommendation,
+    currentPressure,
     sensorData,
     currentTemp,
-    currentPressure,
     deviceId,
   };
 };

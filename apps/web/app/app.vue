@@ -1,8 +1,3 @@
-<script setup lang="ts">
-import Recommendations from "./components/Recommendations/Recommendations.vue";
-import SensorForcast from "./components/SensorForcast/SensorForcast.vue";
-</script>
-
 <template>
   <div>
     <Head>
@@ -31,6 +26,8 @@ import SensorForcast from "./components/SensorForcast/SensorForcast.vue";
 .app-container {
   display: flex;
   flex-direction: row;
+  justify-content: center;
+
   gap: 4rem;
   padding: 2rem;
 }
