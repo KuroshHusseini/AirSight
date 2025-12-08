@@ -1,0 +1,2 @@
+PUBLISH_INTERVAL = 10  # seconds
+LED_PIN = "LED"
