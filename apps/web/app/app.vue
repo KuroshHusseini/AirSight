@@ -1,3 +1,8 @@
+<script setup lang="ts">
+import Recommendations from "./components/Recommendations/Recommendations.vue";
+import SensorForcast from "./components/SensorForcast/SensorForcast.vue";
+</script>
+
 <template>
   <div>
     <Head>
@@ -14,7 +19,25 @@
       />
     </Head>
     <main>
-      <SensorDashboard />
+      <div class="app-container">
+        <SensorForcast />
+        <Recommendations />
+      </div>
     </main>
   </div>
 </template>
+
+<style scoped>
+.app-container {
+  display: flex;
+  flex-direction: row;
+  gap: 4rem;
+  padding: 2rem;
+}
+
+@media (max-width: 700px) {
+  .app-container {
+    flex-direction: column;
+  }
+}
+</style>

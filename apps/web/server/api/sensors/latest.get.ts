@@ -39,17 +39,17 @@ export default defineEventHandler((event) => {
   );
 
   // Updates from MQTT
-  const handleUpdate = (reading: any) => {
+  const handleLatest = (reading: any) => {
     safePush(
       JSON.stringify({
-        type: "update",
+        type: "latest",
         data: reading,
         timestamp: Date.now(),
       })
     );
   };
 
-  mqttService.onSensorUpdate(handleUpdate);
+  mqttService.onSensorLatest(handleLatest);
 
   // Heartbeat
   const heartbeat = setInterval(() => {
@@ -65,7 +65,7 @@ export default defineEventHandler((event) => {
   eventStream.onClosed(() => {
     closed = true;
     clearInterval(heartbeat);
-    mqttService.offSensorUpdate(handleUpdate);
+    mqttService.offSensorLatest(handleLatest);
     console.log("[SSE] Client disconnected");
   });
 
