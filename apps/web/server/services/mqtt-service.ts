@@ -8,6 +8,20 @@ let isConnected: boolean = false;
 let latestReadings: Map<string, SensorReading> = new Map();
 const eventEmitter = new EventEmitter();
 
+// Diagnostics state
+let totalMessages = 0;
+const messagesByTopic: Record<string, number> = {};
+let lastMessageAt: number | null = null;
+let firstConnectAt: number | null = null;
+let lastConnectAt: number | null = null;
+let lastDisconnectAt: number | null = null;
+let connectCount = 0;
+let reconnectCount = 0;
+let disconnectCount = 0;
+let totalConnectedMs = 0;
+let currentSessionStartedAt: number | null = null;
+let recentMessageTimestamps: number[] = [];
+
 const connectToHiveMQ = () => {
   if (client?.connected) {
     console.log("[MQTT Service] ⚠️ Already connected");
@@ -29,6 +43,10 @@ const connectToHiveMQ = () => {
   client.on("connect", () => {
     console.log("[MQTT Service] ✅ Connected to HiveMQ");
     isConnected = true;
+    connectCount += 1;
+    if (!firstConnectAt) firstConnectAt = Date.now();
+    lastConnectAt = Date.now();
+    currentSessionStartedAt = Date.now();
 
     // Subscribe to both temperature and pressure topics
     const topics = [MQTT_TOPICS.SENSOR_TEMP, MQTT_TOPICS.SENSOR_PRESSURE];
@@ -84,6 +102,24 @@ const connectToHiveMQ = () => {
       reading.timestamp = Date.now();
       latestReadings.set(process.env.DEVICE_ID || "unknown", reading);
 
+      // Update diagnostics
+      totalMessages += 1;
+      messagesByTopic[topic] = (messagesByTopic[topic] || 0) + 1;
+      lastMessageAt = reading.timestamp;
+      const now = reading.timestamp;
+      recentMessageTimestamps.push(now);
+      // prune >60s old
+      const cutoff = now - 60000;
+      if (recentMessageTimestamps.length > 0) {
+        let i = 0;
+        while (
+          i < recentMessageTimestamps.length &&
+          recentMessageTimestamps[i] < cutoff
+        )
+          i++;
+        if (i > 0) recentMessageTimestamps = recentMessageTimestamps.slice(i);
+      }
+
       eventEmitter.emit("sensorUpdate", reading);
     } catch (error) {
       console.error("[MQTT Service] ❌ Message processing error:", error);
@@ -103,10 +139,17 @@ const connectToHiveMQ = () => {
   client.on("close", () => {
     console.log("[MQTT Service] ⚠️  Disconnected from HiveMQ");
     isConnected = false;
+    disconnectCount += 1;
+    lastDisconnectAt = Date.now();
+    if (currentSessionStartedAt) {
+      totalConnectedMs += Date.now() - currentSessionStartedAt;
+      currentSessionStartedAt = null;
+    }
   });
 
   client.on("reconnect", () => {
     console.log("[MQTT Service] 🔄 Reconnecting to HiveMQ...");
+    reconnectCount += 1;
   });
 
   client.on("offline", () => {
@@ -152,5 +195,55 @@ export const mqttService = {
 
   offSensorLatest: (callback: (reading: SensorReading) => void) => {
     eventEmitter.off("sensorUpdate", callback);
+  },
+
+  getDiagnostics: () => {
+    const now = Date.now();
+    const windowCutoff = now - 60000;
+    const msgsLastMinute = recentMessageTimestamps.filter(
+      (t) => t >= windowCutoff
+    ).length;
+    const tenSecCutoff = now - 10000;
+    const msgsLast10s = recentMessageTimestamps.filter(
+      (t) => t >= tenSecCutoff
+    ).length;
+    const perSecond = msgsLast10s / 10;
+
+    const connectedDurationMs = currentSessionStartedAt
+      ? totalConnectedMs + (now - currentSessionStartedAt)
+      : totalConnectedMs;
+
+    const lifetimeMs = firstConnectAt ? now - firstConnectAt : 0;
+    const stabilityPct =
+      lifetimeMs > 0
+        ? Math.min(100, Math.max(0, (connectedDurationMs / lifetimeMs) * 100))
+        : 0;
+
+    return {
+      connected: isConnected,
+      brokerUrl: brokerUrl.replace(/\/\/.*@/, "//*****@"),
+      messagesReceived: totalMessages,
+      messagesByTopic: { ...messagesByTopic },
+      lastMessageAt,
+      throughput: {
+        perSecond: Number(perSecond.toFixed(2)),
+        perMinute: msgsLastMinute,
+      },
+
+      connection: {
+        connectCount,
+        reconnectCount,
+        disconnectCount,
+        firstConnectAt,
+        lastConnectAt,
+        lastDisconnectAt,
+        uptimeMs: currentSessionStartedAt ? now - currentSessionStartedAt : 0,
+        totalConnectedMs: connectedDurationMs,
+        stabilityPct: Number(stabilityPct.toFixed(2)),
+      },
+
+      latencyMs: null as number | null, // Not available with current payloads
+      generatedAt: now,
+    };
   },
 };

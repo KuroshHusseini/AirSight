@@ -119,10 +119,6 @@ const isDetailLoading = computed(() => {
 </template>
 
 <style scoped>
-.sensor-dashboard {
-  max-width: 800px;
-}
-
 .status-btn-container {
   display: flex;
   gap: 1rem;
