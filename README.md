@@ -1,209 +1,150 @@
 # AirSight - IoT Environmental Dashboard
 
-A responsive full-stack application that integrates Raspberry Pi Pico W with a Nuxt web dashboard to provide real-time indoor sensor data, outdoor weather integration, and AI-powered insights for clothing, energy usage, and nutrition.
+A full-stack project integrating a Raspberry Pi Pico W and a Nuxt (Nitro) web dashboard to provide real-time indoor sensor data, operational diagnostics, and AI-powered recommendations.
 
-## 🏗️ Architecture
+## Architecture
 
-**Monorepo structure using Yarn workspaces:**
+Monorepo using Yarn workspaces:
 
 ```
 airsight/
 ├── apps/
 │   ├── device/          # Raspberry Pi Pico W (MicroPython)
-│   └── web/             # Nuxt 3 web application
-└── packages/
-    └── shared-types/    # Shared TypeScript types & MQTT schemas
+│   └── web/             # Nuxt 4 app with Nitro server
+└── packages/            # (reserved for shared libs)
 ```
 
-## ✨ Core Features
+Key Nuxt server modules (apps/web/server):
 
-- **Real-time indoor environment telemetry**: Temperature, and pressure from Pico W
-- **AI-driven recommendations**: OpenAI-powered guidance for clothing, energy, nutrition
-- **Unified responsive dashboard**: Mobile-first UX across all devices
-- **MQTT messaging**: Real-time device-to-cloud communication
+- API
+  - /api/sensors/latest (SSE stream of latest readings + heartbeat)
+  - /api/diagnostics/stream (SSE stream of MQTT diagnostics)
+  - /api/recommendations (POST to OpenAI with current readings)
+- Services
+  - mqtt-service.ts (MQTT client + metrics)
+- Plugins
+  - mqtt.ts (bootstraps MQTT service)
 
-## 🛠️ Tech Stack
+Client app (apps/web/app):
 
-### IoT & Device Layer
+- Components
+  - SensorForcast.vue (live readings & connection controls)
+  - Recommendations.vue (AI guidance from current readings)
+  - DiagnosticsPanel.vue (heartbeat, latency, throughput, stability)
+- Composables
+  - useSensorStream.ts (subscribe to sensors SSE)
+  - useDiagnostics.ts (subscribe to diagnostics SSE)
+  - useRecommendations.ts (talks to /api/recommendations)
+- Utils
+  - eventSource.ts, timeAgo.ts, formatTimestamp.ts
 
-- Raspberry Pi Pico W
-- BME/BMP environmental sensors
-- MicroPython
-- MicroPico (VSCode extension)
+## Features
 
-### Messaging
+- Real-time telemetry via SSE:
+  - Latest sensor reading stream
+  - Heartbeat every 10s
+- MQTT operational diagnostics:
+  - Message throughput (msg/s, msg/min)
+  - Connection stability and event counts
+  - Last heartbeat health
+  - Latency label (optional if device sends timestamps)
+- AI Recommendations (OpenAI):
+  - Clothing, Energy, Nutrition suggestions
+- Responsive dashboard with normal scoped CSS (no Tailwind in components)
 
-- MQTT (MQTT.js)
-- EMQX (local) / HiveMQ (cloud)
+## Tech Stack
 
-### Backend
+- Device: Raspberry Pi Pico W, MicroPython
+- Messaging: MQTT (HiveMQ Cloud or local broker)
+- Web: Nuxt 4, Vue 3, Nitro server
+- AI: OpenAI API
 
-- Nuxt 3 (Nitro server)
-- TypeScript
-- OpenAI API
+## Getting Started
 
-### Frontend
-- Nuxt 3 & Vue 3
+Prerequisites:
 
-### Deployment
+- Node.js 24+, Yarn 1.22+
+- A running MQTT broker (HiveMQ Cloud or local)
+- OpenAI API key
 
-- Vercel (Web app)
-- HiveMQ Cloud (MQTT broker)
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-- **Node.js** 24+ and **Yarn** 1.22+
-- **Raspberry Pi Pico W** with MicroPython firmware
-- **MQTT Broker** (EMQX locally or HiveMQ Cloud)
-
-### Installation
+Install:
 
 ```bash
-# Clone the repository
-git clone https://github.com/KuroshHusseini/AirSight.git
-cd AirSight
-
-# Install dependencies
 yarn install
-
-# Set up environment variables (see below)
 cp apps/web/.env.example apps/web/.env
+# Fill apps/web/.env with your MQTT and OpenAI credentials
 ```
 
-### Environment Variables
-
-Create `apps/web/.env`:
-
-```env
-# MQTT Configuration (HiveMQ Cloud example)
-DEVICE_ID=pico-001
-MQTT_USERNAME=airsight
-MQTT_PASSWORD=your_mqtt_password
-MQTT_BROKER=xxxx.s1.eu.hivemq.cloud:8883
-MQTT_PORT=8883
-
-# API Keys
-OPENAI_API_KEY=your_openai_key_here
-WEATHER_API_KEY=your_weather_api_key_here
-```
-
-### Development
+Run (development):
 
 ```bash
-# Run web application
+cd apps/web
 yarn dev
+# http://localhost:3000
+```
 
-# Build for production
+Build and preview:
+
+```bash
+cd apps/web
 yarn build
-
-# Preview production build
 yarn preview
-
 ```
 
-### Device Setup
+## Environment Variables
 
-1. Flash MicroPython firmware to Pico W
-2. Update device credentials:
-   - `apps/device/credentials/network.py` - WiFi credentials
-   - `apps/device/credentials/mqtt.py` - MQTT broker details
-3. Upload code using MicroPico VSCode extension
-4. Run `main.py` on the device
-
-See [apps/device/README.md](apps/device/README.md) for detailed instructions.
-
-## 📁 Workspace Structure
-
-### `apps/web` - Nuxt Application
+Place in apps/web/.env (not committed):
 
 ```
-apps/web/
-├── server/
-│   ├── api/              # REST API endpoints
-│   ├── mqtt/             # MQTT client & message handlers
-│   └── services/         # OpenAI, Weather services
-├── pages/                # Vue pages (dashboard, analytics)
-├── components/           # Vue components
-└── composables/          # Shared Vue logic
+DEVICE_ID=pico-001
+MQTT_USERNAME=your_user
+MQTT_PASSWORD=your_pass
+MQTT_BROKER=your-host.s1.eu.hivemq.cloud
+MQTT_PORT=8883
+OPENAI_API_KEY=sk-...
 ```
 
-### `apps/device` - MicroPython
+Recommended for containers:
 
-```
-apps/device/
-├── config/               # Device configuration
-├── credentials/          # WiFi & MQTT credentials
-├── lib/                  # MicroPython libraries (MQTT)
-├── utils/                # Helper functions
-└── main.py               # Entry point
-```
+- MQTT_URL (prefer websockets on HiveMQ Cloud): wss://<host>:8884
+- Or mqtts://<host>:8883 if 8883 is reachable outbound
 
-## 🔧 Yarn Workspace Commands
+Nuxt runtimeConfig reads:
+
+- mqttBroker, mqttUsername, mqttPassword, openaiApiKey
+
+## Docker (Nuxt Nitro)
+
+Dockerfile (apps/web/Dockerfile) builds and runs the Nitro server:
+
+- Port: 3000 (set PORT and WEBSITES_PORT in hosting)
+- CMD: node .output/server/index.mjs
+
+Build and run locally:
 
 ```bash
-# Run command in specific workspace
-yarn workspace @airsight/web dev
-yarn workspace @airsight/shared-types build
-
-# Run command across all workspaces
-yarn workspaces run build
-
-# Add dependency to workspace
-yarn workspace @airsight/web add mqtt
-
-# Add dev dependency
-yarn workspace @airsight/web add -D eslint
-
-# Add dependency to root
-yarn add -W -D prettier
+docker run --rm -p 3000:3000 --env-file .env airsight-web:latest
 ```
 
-### SensorReading
+## Device Setup (Pico W)
 
-```typescript
-{
-  temperature: number; // Celsius
-  pressure: number; // hPa
-  timestamp: number; // Unix timestamp
-  deviceId: string;
-}
+Update credentials in apps/device:
+
+- credentials/network.py (Wi-Fi)
+- credentials/mqtt.py (broker host/user/pass)
+
+Publish sensor readings with a timestamp to enable latency:
+
+```python
+# suggested payload from device
+{"deviceId": "pico-001", "temperature": 23.5, "pressure": 1004.2, "timestamp": 1733720000000}
 ```
 
-## 🚀 Deployment
+## API Overview
 
-### Web Application (Vercel)
-
-```bash
-# Connect to Vercel
-vercel login
-
-# Deploy
-vercel --prod
-```
-
-### MQTT Broker (HiveMQ Cloud)
-
-1. Create free cluster at [hivemq.com/cloud](https://www.hivemq.com/mqtt-cloud-broker/)
-2. Update device credentials with cloud broker URL
-3. Configure web app with same broker URL
-
-## 📝 Development Workflow
-
-1. **Device Development**: Edit MicroPython code, flash to Pico W via MicroPico
-2. **Backend API**: Create endpoints in `apps/web/server/api/`
-3. **Frontend**: Build Vue components in `apps/web/components/`
-4. **Testing**: Test device → MQTT → backend → frontend flow
-
-## 🤝 Contributing
-
-1. Create a feature branch: `git checkout -b feature/amazing-feature`
-2. Make changes and commit: `git commit -m 'Add amazing feature'`
-3. Push to branch: `git push origin feature/amazing-feature`
-4. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License.
-
+- GET /api/sensors/latest
+  - SSE stream: initial latest reading, heartbeat, updates
+- GET /api/diagnostics/stream
+  - SSE stream: periodic diagnostics snapshot (5s)
+- POST /api/recommendations
+  - Accepts current SensorReading and returns AI guidance
