@@ -2,23 +2,28 @@ import mqtt from "mqtt";
 import { MQTT_TOPICS, SensorReading } from "../types";
 import { EventEmitter } from "events";
 
-const brokerUrl = `mqtts://${process.env.MQTT_BROKER}`;
 let client: mqtt.MqttClient | null = null;
 let isConnected: boolean = false;
 let latestReadings: Map<string, SensorReading> = new Map();
+const host = process.env.MQTT_BROKER;
+const port = Number(process.env.MQTT_PORT || 8883);
+
 const eventEmitter = new EventEmitter();
 
 // Diagnostics state
-let totalMessages = 0;
 const messagesByTopic: Record<string, number> = {};
+
 let lastMessageAt: number | null = null;
 let firstConnectAt: number | null = null;
 let lastConnectAt: number | null = null;
 let lastDisconnectAt: number | null = null;
+
+let totalMessages = 0;
 let connectCount = 0;
 let reconnectCount = 0;
 let disconnectCount = 0;
 let totalConnectedMs = 0;
+
 let currentSessionStartedAt: number | null = null;
 let recentMessageTimestamps: number[] = [];
 
@@ -28,11 +33,14 @@ const connectToHiveMQ = () => {
     return client;
   }
 
-  client = mqtt.connect(brokerUrl, {
+  console.log("[MQTT Service] Using MQTT host:", host, "port:", port);
+
+  client = mqtt.connect({
+    host,
+    port,
+    protocol: "mqtts",
     username: process.env.MQTT_USERNAME,
     password: process.env.MQTT_PASSWORD,
-    port: 8883,
-    protocol: "mqtts",
     clientId: `airsight-web-${Date.now()}`,
     reconnectPeriod: 1000,
     connectTimeout: 30000,
@@ -44,7 +52,11 @@ const connectToHiveMQ = () => {
     console.log("[MQTT Service] ✅ Connected to HiveMQ");
     isConnected = true;
     connectCount += 1;
-    if (!firstConnectAt) firstConnectAt = Date.now();
+
+    if (!firstConnectAt) {
+      firstConnectAt = Date.now();
+    }
+
     lastConnectAt = Date.now();
     currentSessionStartedAt = Date.now();
 
@@ -105,19 +117,26 @@ const connectToHiveMQ = () => {
       // Update diagnostics
       totalMessages += 1;
       messagesByTopic[topic] = (messagesByTopic[topic] || 0) + 1;
+
       lastMessageAt = reading.timestamp;
       const now = reading.timestamp;
+
       recentMessageTimestamps.push(now);
-      // prune >60s old
+
       const cutoff = now - 60000;
+
       if (recentMessageTimestamps.length > 0) {
-        let i = 0;
+        let index = 0;
+
         while (
-          i < recentMessageTimestamps.length &&
-          recentMessageTimestamps[i] < cutoff
+          index < recentMessageTimestamps.length &&
+          recentMessageTimestamps[index] < cutoff
         )
-          i++;
-        if (i > 0) recentMessageTimestamps = recentMessageTimestamps.slice(i);
+          index++;
+
+        if (index > 0) {
+          recentMessageTimestamps = recentMessageTimestamps.slice(index);
+        }
       }
 
       eventEmitter.emit("sensorUpdate", reading);
@@ -133,14 +152,17 @@ const connectToHiveMQ = () => {
       "[MQTT Service] ❌ Connection error:",
       error.message || error
     );
+
     isConnected = false;
   });
 
   client.on("close", () => {
     console.log("[MQTT Service] ⚠️  Disconnected from HiveMQ");
+
     isConnected = false;
     disconnectCount += 1;
     lastDisconnectAt = Date.now();
+
     if (currentSessionStartedAt) {
       totalConnectedMs += Date.now() - currentSessionStartedAt;
       currentSessionStartedAt = null;
@@ -175,7 +197,7 @@ export const mqttService = {
 
   getStatus: () => ({
     connected: isConnected,
-    brokerUrl: brokerUrl.replace(/\/\/.*@/, "//*****@"), // Hide credentials in logs
+    brokerUrl: `mqtts://${host}:${port}`,
     subscribedTopics: [MQTT_TOPICS.SENSOR_TEMP, MQTT_TOPICS.SENSOR_PRESSURE],
     deviceCount: latestReadings.size,
   }),
@@ -200,20 +222,20 @@ export const mqttService = {
   getDiagnostics: () => {
     const now = Date.now();
     const windowCutoff = now - 60000;
+    const tenSecCutoff = now - 10000;
+    const lifetimeMs = firstConnectAt ? now - firstConnectAt : 0;
+
     const msgsLastMinute = recentMessageTimestamps.filter(
       (t) => t >= windowCutoff
     ).length;
-    const tenSecCutoff = now - 10000;
-    const msgsLast10s = recentMessageTimestamps.filter(
-      (t) => t >= tenSecCutoff
-    ).length;
-    const perSecond = msgsLast10s / 10;
+
+    const msgsLast10s =
+      recentMessageTimestamps.filter((t) => t >= tenSecCutoff).length / 10;
 
     const connectedDurationMs = currentSessionStartedAt
       ? totalConnectedMs + (now - currentSessionStartedAt)
       : totalConnectedMs;
 
-    const lifetimeMs = firstConnectAt ? now - firstConnectAt : 0;
     const stabilityPct =
       lifetimeMs > 0
         ? Math.min(100, Math.max(0, (connectedDurationMs / lifetimeMs) * 100))
@@ -221,12 +243,12 @@ export const mqttService = {
 
     return {
       connected: isConnected,
-      brokerUrl: brokerUrl.replace(/\/\/.*@/, "//*****@"),
+      brokerUrl: `mqtts://${host}:${port}`,
       messagesReceived: totalMessages,
       messagesByTopic: { ...messagesByTopic },
       lastMessageAt,
       throughput: {
-        perSecond: Number(perSecond.toFixed(2)),
+        perSecond: Number(msgsLast10s.toFixed(2)),
         perMinute: msgsLastMinute,
       },
 
@@ -242,7 +264,7 @@ export const mqttService = {
         stabilityPct: Number(stabilityPct.toFixed(2)),
       },
 
-      latencyMs: null as number | null, // Not available with current payloads
+      latencyMs: null as number | null,
       generatedAt: now,
     };
   },
