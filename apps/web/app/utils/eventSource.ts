@@ -1,4 +1,4 @@
-import type { connectionStatusRef } from "../types";
+import type { connectionStatusRef } from "~/types";
 
 export const disconnectSubscriptionHandler = (
   reconnectTimer: number | null,

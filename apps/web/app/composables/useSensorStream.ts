@@ -1,8 +1,5 @@
 import { onMounted, onUnmounted, shallowRef } from "vue";
-import type {
-  SensorReading,
-  connectionStatusType,
-} from "../components/SensorForcast/types";
+import type { SensorReading, connectionStatusType } from "../types";
 
 export const useConnectionStatus = () =>
   useState<connectionStatusType>("status", () => "connecting");
@@ -14,6 +11,10 @@ export const useSensorStream = () => {
   const connectionStatus = useConnectionStatus();
   const isConnected = ref(false);
   const sensorData = useSensors();
+  const lastHeartbeatAt = useState<number | null>(
+    "sensorHeartbeat",
+    () => null
+  );
   const eventSource = shallowRef<EventSource | null>(null);
   const reconnectTimer = shallowRef<number | null>(null);
 
@@ -56,6 +57,10 @@ export const useSensorStream = () => {
           if (message.type === "latest") {
             sensorData.value = message.data;
           }
+
+          if (message.type === "heartbeat") {
+            lastHeartbeatAt.value = message.timestamp ?? Date.now();
+          }
         } catch (err) {
           console.error("[SSE] Parse error:", err, event.data);
         }
@@ -92,6 +97,7 @@ export const useSensorStream = () => {
     sensorData,
     connectionStatus,
     isConnected,
+    lastHeartbeatAt,
     connect,
     disconnectFromSensorHandler,
   };
