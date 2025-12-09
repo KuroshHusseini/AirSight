@@ -87,7 +87,7 @@ const waitingForData = computed(
 }
 
 .description {
-  margin-bottom: 1rem;
+  margin-bottom: 1.9rem;
   font-size: 1rem;
   color: #1f2937;
 }
@@ -98,10 +98,10 @@ const waitingForData = computed(
 }
 
 .btn {
-  background: #2563eb; /* blue-600 */
-  margin: 0.5rem 0 1.5rem 0;
+  background: #2563eb;
   color: white;
   border: none;
+  margin-bottom: 1.6rem;
   padding: 0.8rem 1rem;
   border-radius: 0.5rem;
   cursor: pointer;
@@ -126,6 +126,7 @@ const waitingForData = computed(
   border: 1px solid #e5e7eb;
   border-radius: 0.5rem;
   padding: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .card.info {
@@ -135,5 +136,50 @@ const waitingForData = computed(
 .card h3 {
   font-weight: 600;
   margin-bottom: 0.5rem;
+}
+
+@media (max-width: 1000px) {
+  .heading {
+    font-size: 1.75rem;
+  }
+
+  .description {
+    font-size: 1rem;
+  }
+
+  .btn {
+    padding: 0.6rem 0.8rem;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 800px) {
+  .heading {
+    font-size: 1.5rem;
+  }
+
+  .description {
+    font-size: 0.9rem;
+  }
+
+  .btn {
+    padding: 0.5rem 0.7rem;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .heading {
+    font-size: 1.25rem;
+  }
+
+  .description {
+    font-size: 0.85rem;
+  }
+
+  .btn {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.8rem;
+  }
 }
 </style>

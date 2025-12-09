@@ -1,8 +1,5 @@
 import { onMounted, onUnmounted, shallowRef } from "vue";
-import type {
-  SensorReading,
-  connectionStatusType,
-} from "../components/SensorForcast/types";
+import type { SensorReading, connectionStatusType } from "../types";
 
 export const useConnectionStatus = () =>
   useState<connectionStatusType>("status", () => "connecting");
