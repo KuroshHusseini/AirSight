@@ -138,7 +138,7 @@ const isDetailLoading = computed(() => {
 
 .description {
   margin-bottom: 1rem;
-  font-size: 1.2rem;
+  font-size: 1rem;
   color: #1f2937;
 }
 
