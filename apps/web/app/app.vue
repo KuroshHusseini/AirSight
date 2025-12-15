@@ -33,8 +33,10 @@ body {
 .app-container {
   display: flex;
   justify-content: center;
-  padding: 2rem;
   box-sizing: border-box;
+  max-width: 100%;
+  max-height: 100ovh;
+  padding: 2rem;
 }
 
 .app-container .content {
@@ -43,16 +45,29 @@ body {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   grid-auto-rows: 1fr;
-  gap: 1rem;
+  gap: 2rem;
+}
+
+.app-container .content > :deep(*) {
+  min-width: 0;
 }
 
 @media (max-width: 700px) {
   .app-container {
     flex-direction: column;
+    padding: 1rem;
   }
+
   .app-container .content {
     grid-template-columns: 1fr;
     max-width: 100%;
+  }
+}
+
+@media (max-width: 400px) {
+  .app-container .content {
+    grid-template-columns: 1fr;
+    gap: 1rem;
   }
 }
 </style>

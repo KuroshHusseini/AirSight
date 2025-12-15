@@ -116,6 +116,8 @@ onUnmounted(() => {
   background: #f9fafb;
   border-radius: 0.5rem;
   padding: 0.75rem;
+  width: 100%;
+  min-width: 0;
 }
 
 .box-full {

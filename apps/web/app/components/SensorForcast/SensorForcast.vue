@@ -203,6 +203,7 @@ const isDetailLoading = computed(() => {
 
 .sensor-card {
   background: white;
+  max-width: 100%;
   border: 1px solid #e5e7eb;
   border-radius: 0.75rem;
   padding: clamp(1.5rem, 4vw, 2rem);
@@ -268,10 +269,6 @@ const isDetailLoading = computed(() => {
 
 /* Tablet breakpoint */
 @media (max-width: 768px) {
-  .sensor-dashboard {
-    padding: 0 0.75rem;
-  }
-
   .status-btn-container {
     gap: 0.75rem;
   }
@@ -294,10 +291,6 @@ const isDetailLoading = computed(() => {
 
 /* Mobile breakpoint */
 @media (max-width: 480px) {
-  .sensor-dashboard {
-    padding: 0 0.5rem;
-  }
-
   .status-btn-container {
     flex-direction: column;
     gap: 0.5rem;
