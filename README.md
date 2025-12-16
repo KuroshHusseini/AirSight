@@ -1,150 +1,116 @@
-# AirSight - IoT Environmental Dashboard
+# AirSight
 
-A full-stack project integrating a Raspberry Pi Pico W and a Nuxt (Nitro) web dashboard to provide real-time indoor sensor data, operational diagnostics, and AI-powered recommendations.
+AirSight is a small end-to-end IoT demo:
 
-## Architecture
+- A Raspberry Pi Pico W (MicroPython) reads a BMP280 sensor and publishes telemetry via MQTT.
+- A Nuxt 4 (Nitro) web app subscribes to MQTT, streams data to the browser via SSE, and can generate AI recommendations using OpenAI.
+
+---
+
+## Repo structure
 
 Monorepo using Yarn workspaces:
 
 ```
 airsight/
 ├── apps/
-│   ├── device/          # Raspberry Pi Pico W (MicroPython)
-│   └── web/             # Nuxt 4 app with Nitro server
-└── packages/            # (reserved for shared libs)
+│   ├── device/          # Raspberry Pi Pico W firmware (MicroPython)
+│   └── web/             # Nuxt 4 app + Nitro server
+└── packages/            # reserved for shared libs
 ```
 
-Key Nuxt server modules (apps/web/server):
+---
 
-- API
-  - /api/sensors/latest (SSE stream of latest readings + heartbeat)
-  - /api/diagnostics/stream (SSE stream of MQTT diagnostics)
-  - /api/recommendations (POST to OpenAI with current readings)
-- Services
-  - mqtt-service.ts (MQTT client + metrics)
-- Plugins
-  - mqtt.ts (bootstraps MQTT service)
+## Data flow
 
-Client app (apps/web/app):
+1. Pico W publishes numeric values to MQTT topics:
+   - `pico/temp`
+   - `pico/pressure`
+2. The Nuxt server connects to the broker over TLS (`mqtts`), subscribes to those topics, and keeps the latest reading in memory.
+3. The browser receives live updates via SSE endpoints.
 
-- Components
-  - SensorForcast.vue (live readings & connection controls)
-  - Recommendations.vue (AI guidance from current readings)
-  - DiagnosticsPanel.vue (heartbeat, latency, throughput, stability)
-- Composables
-  - useSensorStream.ts (subscribe to sensors SSE)
-  - useDiagnostics.ts (subscribe to diagnostics SSE)
-  - useRecommendations.ts (talks to /api/recommendations)
-- Utils
-  - eventSource.ts, timeAgo.ts, formatTimestamp.ts
+---
 
-## Features
+## Web API (SSE + AI)
 
-- Real-time telemetry via SSE:
-  - Latest sensor reading stream
-  - Heartbeat every 10s
-- MQTT operational diagnostics:
-  - Message throughput (msg/s, msg/min)
-  - Connection stability and event counts
-  - Last heartbeat health
-  - Latency label (optional if device sends timestamps)
-- AI Recommendations (OpenAI):
-  - Clothing, Energy, Nutrition suggestions
-- Responsive dashboard with normal scoped CSS (no Tailwind in components)
+The Nuxt/Nitro server exposes:
 
-## Tech Stack
+- `GET /api/sensors/latest` (SSE)
+  - initial snapshot + subsequent updates
+  - heartbeat every 10 seconds
+- `GET /api/diagnostics/stream` (SSE)
+  - periodic MQTT connection/throughput diagnostics
+- `POST /api/recommendations`
+  - sends the current reading to OpenAI and returns JSON recommendations
 
-- Device: Raspberry Pi Pico W, MicroPython
-- Messaging: MQTT (HiveMQ Cloud or local broker)
-- Web: Nuxt 4, Vue 3, Nitro server
-- AI: OpenAI API
+---
 
-## Getting Started
+## Quickstart (web)
 
-Prerequisites:
-
-- Node.js 24+, Yarn 1.22+
-- A running MQTT broker (HiveMQ Cloud or local)
-- OpenAI API key
-
-Install:
+Prereqs: Node.js 24+, Yarn 1.22+
 
 ```bash
 yarn install
 cp apps/web/.env.example apps/web/.env
-# Fill apps/web/.env with your MQTT and OpenAI credentials
 ```
 
-Run (development):
+Edit [apps/web/.env.example](apps/web/.env.example) → fill values in [apps/web/.env](apps/web/.env) (this file must stay local).
+
+Run:
 
 ```bash
-cd apps/web
 yarn dev
 # http://localhost:3000
 ```
 
-Build and preview:
+---
+
+## Quickstart (device)
+
+See [apps/device/README.md](apps/device/README.md) for the Pico W steps.
+
+At a high level:
+
+- Flash MicroPython on the Pico W (MicroPico can do this)
+- Update Wi‑Fi + MQTT settings in `apps/device/credentials/`
+- Upload the project to the Pico
+
+---
+
+## Environment variables (web)
+
+The Nuxt server reads these environment variables:
+
+- `DEVICE_ID` (used to label the latest reading in the UI)
+- `MQTT_BROKER`
+- `MQTT_PORT` (default `8883`)
+- `MQTT_USERNAME`
+- `MQTT_PASSWORD`
+- `OPENAI_API_KEY` (required only for `/api/recommendations`)
+
+---
+
+## Docker (web)
+
+Build the container:
 
 ```bash
-cd apps/web
-yarn build
-yarn preview
+docker build -t airsight-web ./apps/web
 ```
 
-## Environment Variables
-
-Place in apps/web/.env (not committed):
-
-```
-DEVICE_ID=pico-001
-MQTT_USERNAME=your_user
-MQTT_PASSWORD=your_pass
-MQTT_BROKER=your-host.s1.eu.hivemq.cloud
-MQTT_PORT=8883
-OPENAI_API_KEY=sk-...
-```
-
-Recommended for containers:
-
-- MQTT_URL (prefer websockets on HiveMQ Cloud): wss://<host>:8884
-- Or mqtts://<host>:8883 if 8883 is reachable outbound
-
-Nuxt runtimeConfig reads:
-
-- mqttBroker, mqttUsername, mqttPassword, openaiApiKey
-
-## Docker (Nuxt Nitro)
-
-Dockerfile (apps/web/Dockerfile) builds and runs the Nitro server:
-
-- Port: 3000 (set PORT and WEBSITES_PORT in hosting)
-- CMD: node .output/server/index.mjs
-
-Build and run locally:
+Run it:
 
 ```bash
-docker run --rm -p 3000:3000 --env-file .env airsight-web:latest
+docker run --rm -p 3000:3000 --env-file ./apps/web/.env airsight-web
 ```
 
-## Device Setup (Pico W)
+---
 
-Update credentials in apps/device:
+## Security note (important)
 
-- credentials/network.py (Wi-Fi)
-- credentials/mqtt.py (broker host/user/pass)
+Do not commit secrets.
 
-Publish sensor readings with a timestamp to enable latency:
+- `apps/device/credentials/` contains Wi‑Fi + broker credentials.
+- `apps/web/.env` contains broker credentials and (optionally) an OpenAI API key.
 
-```python
-# suggested payload from device
-{"deviceId": "pico-001", "temperature": 23.5, "pressure": 1004.2, "timestamp": 1733720000000}
-```
-
-## API Overview
-
-- GET /api/sensors/latest
-  - SSE stream: initial latest reading, heartbeat, updates
-- GET /api/diagnostics/stream
-  - SSE stream: periodic diagnostics snapshot (5s)
-- POST /api/recommendations
-  - Accepts current SensorReading and returns AI guidance
+If secrets were committed at any point, rotate them and purge them from git history.
