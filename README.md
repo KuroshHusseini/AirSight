@@ -5,6 +5,8 @@ AirSight is a small end-to-end IoT demo:
 - A Raspberry Pi Pico W (MicroPython) reads a BMP280 sensor and publishes telemetry via MQTT.
 - A Nuxt 4 (Nitro) web app subscribes to MQTT, streams data to the browser via SSE, and can generate AI recommendations using OpenAI.
 
+**Live site:** https://airsight-web-latest.onrender.com
+
 ---
 
 ## Repo structure
