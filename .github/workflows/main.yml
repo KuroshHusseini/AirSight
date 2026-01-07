@@ -20,7 +20,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: ${{ secrets.DOCKER_USERNAME }}/airsight-web:ci
 
-  deploy:
+  release:
     if: github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
@@ -43,3 +43,6 @@ jobs:
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/airsight-web:latest
             ${{ secrets.DOCKER_USERNAME }}/airsight-web:${{ env.BUILD_TAG }}
+      - name: Confirm deployment
+        run: |
+          echo "Deployed image with tags: latest, ${{ env.BUILD_TAG }}"
